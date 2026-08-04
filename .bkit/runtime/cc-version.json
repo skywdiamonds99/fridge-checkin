@@ -1,0 +1,7 @@
+{
+  "version": null,
+  "isOldVersion": false,
+  "detectedAt": "2026-08-04T06:32:25.575Z",
+  "ttlSeconds": 3600,
+  "detectError": "Command failed: claude --version\n/bin/sh: claude: command not found\n"
+}

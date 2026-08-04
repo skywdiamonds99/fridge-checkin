@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+:root {
+  /* Figma 디자인(2026-08-04)의 색상 그대로 — 절대 임의로 바꾸지 않는다 */
+  --color-brand: #55650d; /* 진한 올리브 — 버튼/선택 텍스트 */
+  --color-brand-light: #bdd06f; /* 연한 올리브 — CTA 배경 */
+  --color-brand-selected-text: #4a5900;
+
+  --color-bg: #f8f9fa;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f3f4f5;
+  --color-surface-muted: #edeeef;
+
+  --color-text-primary: #191c1d;
+  --color-text-secondary: #46483a;
+
+  /* 소비기한 상태 표시 전용 (PRD — 다른 용도로 쓰지 않는다) */
+  --color-red: #ba1a1a;
+  --color-red-bg: #ffdad6;
+  --color-yellow: #a68b00;
+  --color-yellow-bg: #f9e534;
+  --color-green: #34a853;
+  --color-green-bg: #34c759;
+  --color-expired: #46483a;
+  --color-expired-bg: #e1e3e4;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: #eceeee; /* 모바일 화면 바깥 여백 배경 (390px 프레임 밖) */
+}

@@ -1,0 +1,52 @@
+{
+  "fileEditCounts": {
+    "/Users/hyunji/Desktop/my-app/components/ItemForm.js": {
+      "count": 3,
+      "ts": 1785826175132
+    },
+    "/Users/hyunji/Desktop/my-app/app/receipt/page.js": {
+      "count": 3,
+      "ts": 1785826248413
+    },
+    "/Users/hyunji/Desktop/my-app/app/globals.css": {
+      "count": 1,
+      "ts": 1785825694076
+    },
+    "/Users/hyunji/Desktop/my-app/components/BottomNav.js": {
+      "count": 2,
+      "ts": 1785825720249
+    },
+    "/Users/hyunji/Desktop/my-app/lib/dashboardStats.js": {
+      "count": 1,
+      "ts": 1785825773972
+    },
+    "/Users/hyunji/Desktop/my-app/components/StatusIconBadge.js": {
+      "count": 1,
+      "ts": 1785825785407
+    },
+    "/Users/hyunji/Desktop/my-app/app/page.js": {
+      "count": 1,
+      "ts": 1785825814981
+    },
+    "/Users/hyunji/Desktop/my-app/components/ItemCard.js": {
+      "count": 1,
+      "ts": 1785825840138
+    },
+    "/Users/hyunji/Desktop/my-app/app/browse/page.js": {
+      "count": 1,
+      "ts": 1785825899121
+    },
+    "/Users/hyunji/Desktop/my-app/components/ItemFields.js": {
+      "count": 1,
+      "ts": 1785826164567
+    },
+    "/Users/hyunji/Desktop/my-app/components/ReceiptConfirmCard.js": {
+      "count": 1,
+      "ts": 1785826209257
+    },
+    "/private/tmp/claude-501/-Users-hyunji-Desktop-my-app/7be6c952-2b20-45b9-bc2d-ac1c313509ae/scratchpad/deploy-github.sh": {
+      "count": 1,
+      "ts": 1785827496290
+    }
+  }
+}
