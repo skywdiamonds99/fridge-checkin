@@ -62,10 +62,8 @@ export default function ReceiptPage() {
           return;
         }
         streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
+        // <video> 태그는 cameraReady가 true가 되어야 화면에 마운트된다.
+        // 여기서는 아직 videoRef.current가 null이라 srcObject 연결은 다음 effect에서 한다.
         setCameraReady(true);
       })
       .catch(() => setCameraReady(false));
@@ -77,6 +75,14 @@ export default function ReceiptPage() {
       setCameraReady(false);
     };
   }, [step]);
+
+  // cameraReady가 true로 바뀌어 <video>가 실제로 DOM에 마운트된 다음에 스트림을 연결한다.
+  // (마운트 전 videoRef.current는 null이라 위 effect에서 바로 연결하면 화면에 아무것도 안 뜬다)
+  useEffect(() => {
+    if (!cameraReady || !videoRef.current || !streamRef.current) return;
+    videoRef.current.srcObject = streamRef.current;
+    videoRef.current.play().catch(() => {});
+  }, [cameraReady]);
 
   function captureFromCamera() {
     const video = videoRef.current;

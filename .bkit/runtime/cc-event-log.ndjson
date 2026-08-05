@@ -62,3 +62,9 @@
 {"hookEvent":"SessionEnd","ccVersion":"2.1.220","sessionId":"4d824b60-5a74-4f5f-87b7-15a5be0cff4b","timestamp":"2026-08-05T00:17:54.355Z","context":{"reason":"other"}}
 {"hookEvent":"Stop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:24:43.565Z","context":{"agent":"main","skill":null}}
 {"hookEvent":"SubagentStop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:24:46.694Z","context":{"agentType":"unknown","status":"completed"}}
+{"hookEvent":"SessionEnd","ccVersion":"2.1.220","sessionId":"3001af42-12e1-49bd-8507-a0f058d14165","timestamp":"2026-08-05T00:32:52.694Z","context":{"reason":"other"}}
+{"hookEvent":"SessionEnd","ccVersion":"2.1.220","sessionId":"e4b443cc-87c3-468e-9d4c-c1f93f8beb9b","timestamp":"2026-08-05T00:37:30.999Z","context":{"reason":"other"}}
+{"hookEvent":"Stop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:41:37.754Z","context":{"agent":"main","skill":null}}
+{"hookEvent":"SubagentStop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:41:40.578Z","context":{"agentType":"unknown","status":"completed"}}
+{"hookEvent":"Stop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:49:16.926Z","context":{"agent":"main","skill":null}}
+{"hookEvent":"SubagentStop","ccVersion":"2.1.220","sessionId":"7be6c952-2b20-45b9-bc2d-ac1c313509ae","timestamp":"2026-08-05T00:49:24.526Z","context":{"agentType":"unknown","status":"completed"}}
