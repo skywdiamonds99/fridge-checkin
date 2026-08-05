@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const STORAGE_OPTIONS = ["냉장", "냉동", "실온"];
 
 // 품목명/수량/보관구분/보관일수 입력 UI. ItemForm(직접 추가)과
@@ -12,19 +14,22 @@ export default function ItemFields({
   manualDays,
   onManualDaysChange,
   match,
+  showName = true,
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <label className="flex flex-col gap-1 text-sm" style={{ color: "var(--color-text-secondary)" }}>
-        품목명
-        <input
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-          placeholder="예: 서울우유 1L"
-          className="min-h-[44px] rounded-md px-3 text-sm"
-          style={{ backgroundColor: "var(--color-surface-alt)", color: "var(--color-text-primary)" }}
-        />
-      </label>
+      {showName && (
+        <label className="flex flex-col gap-1 text-sm" style={{ color: "var(--color-text-secondary)" }}>
+          품목명
+          <input
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder="예: 서울우유 1L"
+            className="min-h-[44px] rounded-md px-3 text-sm"
+            style={{ backgroundColor: "var(--color-surface-alt)", color: "var(--color-text-primary)" }}
+          />
+        </label>
+      )}
 
       <div className="flex h-[44px] items-center justify-between">
         <div className="flex h-full items-center rounded-lg p-1" style={{ backgroundColor: "var(--color-surface-muted)" }}>
@@ -55,7 +60,7 @@ export default function ItemFields({
             style={{ color: "var(--color-text-secondary)" }}
             aria-label="수량 줄이기"
           >
-            −
+            <Image src="/icons/qty-minus.svg" alt="" width={11} height={2} />
           </button>
           <span className="min-w-[24px] text-center text-sm" style={{ color: "var(--color-text-primary)" }}>
             {quantity}
@@ -67,7 +72,7 @@ export default function ItemFields({
             style={{ color: "var(--color-text-secondary)" }}
             aria-label="수량 늘리기"
           >
-            +
+            <Image src="/icons/qty-plus.svg" alt="" width={11} height={11} />
           </button>
         </div>
       </div>

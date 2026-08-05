@@ -5,16 +5,16 @@
       "ts": 1785826175132
     },
     "/Users/hyunji/Desktop/my-app/app/receipt/page.js": {
-      "count": 3,
-      "ts": 1785826248413
+      "count": 4,
+      "ts": 1785831989014
     },
     "/Users/hyunji/Desktop/my-app/app/globals.css": {
       "count": 1,
       "ts": 1785825694076
     },
     "/Users/hyunji/Desktop/my-app/components/BottomNav.js": {
-      "count": 2,
-      "ts": 1785825720249
+      "count": 3,
+      "ts": 1785833003132
     },
     "/Users/hyunji/Desktop/my-app/lib/dashboardStats.js": {
       "count": 1,
@@ -33,20 +33,40 @@
       "ts": 1785825840138
     },
     "/Users/hyunji/Desktop/my-app/app/browse/page.js": {
-      "count": 1,
-      "ts": 1785825899121
+      "count": 2,
+      "ts": 1785831730740
     },
     "/Users/hyunji/Desktop/my-app/components/ItemFields.js": {
       "count": 1,
       "ts": 1785826164567
     },
     "/Users/hyunji/Desktop/my-app/components/ReceiptConfirmCard.js": {
-      "count": 1,
-      "ts": 1785826209257
+      "count": 2,
+      "ts": 1785831944999
     },
     "/private/tmp/claude-501/-Users-hyunji-Desktop-my-app/7be6c952-2b20-45b9-bc2d-ac1c313509ae/scratchpad/deploy-github.sh": {
       "count": 1,
       "ts": 1785827496290
+    },
+    "/private/tmp/claude-501/-Users-hyunji-Desktop-my-app/7be6c952-2b20-45b9-bc2d-ac1c313509ae/scratchpad/push-github.sh": {
+      "count": 1,
+      "ts": 1785827581665
+    },
+    "/private/tmp/claude-501/-Users-hyunji-Desktop-my-app/7be6c952-2b20-45b9-bc2d-ac1c313509ae/scratchpad/deploy-vercel.sh": {
+      "count": 1,
+      "ts": 1785828465456
+    },
+    "/Users/hyunji/Desktop/my-app/lib/groupItems.js": {
+      "count": 1,
+      "ts": 1785831684955
+    },
+    "/Users/hyunji/Desktop/my-app/components/BrowseItemCard.js": {
+      "count": 1,
+      "ts": 1785831714554
+    },
+    "/Users/hyunji/Desktop/my-app/PRESENTATION_PLAN.md": {
+      "count": 1,
+      "ts": 1785832912715
     }
   }
 }

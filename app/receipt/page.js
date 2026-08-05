@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useRef, useState } from "react";
 import { addItems, hasDuplicateReceipt } from "@/lib/storage";
 import { computeExpiryDate } from "@/lib/expiry";
 import { classifyReceiptItems } from "@/lib/classifyReceiptItems";
@@ -16,16 +17,88 @@ function fileToDataUrl(file) {
   });
 }
 
+function generateKey() {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+const CORNER_CLASSES = [
+  "top-0 left-0 border-t-4 border-l-4 rounded-tl-xl",
+  "top-0 right-0 border-t-4 border-r-4 rounded-tr-xl",
+  "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-xl",
+  "bottom-0 right-0 border-b-4 border-r-4 rounded-br-xl",
+];
+
 export default function ReceiptPage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
 
   const [images, setImages] = useState([]); // 메모리에만 유지, 기기 저장 안 함 (PRD 8장)
   const [step, setStep] = useState("capture"); // capture | uploading | duplicate | confirm
   const [errorMessage, setErrorMessage] = useState("");
+  const [cameraReady, setCameraReady] = useState(false);
   const [purchaseDateTime, setPurchaseDateTime] = useState(null);
-  const [pendingConfirm, setPendingConfirm] = useState([]);
+  const [reviewItems, setReviewItems] = useState([]);
   const [resolutions, setResolutions] = useState({});
+
+  // 은행 카드 스캔처럼, 뷰파인더 박스에 실제 카메라 화면을 실시간으로 띄운다.
+  useEffect(() => {
+    if (step !== "capture") return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setCameraReady(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      .then((stream) => {
+        if (cancelled) {
+          stream.getTracks().forEach((t) => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+        setCameraReady(true);
+      })
+      .catch(() => setCameraReady(false));
+
+    return () => {
+      cancelled = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+      setCameraReady(false);
+    };
+  }, [step]);
+
+  function captureFromCamera() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < 2) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0, canvas.width, canvas.height);
+    setImages((prev) => [...prev, canvas.toDataURL("image/jpeg", 0.9)]);
+  }
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+
+  function handleShutter() {
+    if (cameraReady) {
+      captureFromCamera();
+    } else {
+      openFilePicker();
+    }
+  }
 
   async function handleFilesSelected(e) {
     const files = Array.from(e.target.files || []);
@@ -33,10 +106,6 @@ export default function ReceiptPage() {
     if (files.length === 0) return;
     const dataUrls = await Promise.all(files.map(fileToDataUrl));
     setImages((prev) => [...prev, ...dataUrls]);
-  }
-
-  function openCamera() {
-    fileInputRef.current?.click();
   }
 
   function saveAndGoHome(records) {
@@ -74,31 +143,39 @@ export default function ReceiptPage() {
 
       const { autoItems, needsConfirmation } = classifyReceiptItems(data.items);
 
-      // 기준표에 자동 매칭된 품목은 사람 개입 없이 곧바로 저장한다
-      const autoRecords = autoItems.map((item) => ({
-        name: item.name,
+      // 자동 매칭 여부와 관계없이 스캔된 품목 전부를 확인 화면에 띄운다 — 아무것도 몰래 저장하지 않는다.
+      const matchedReview = autoItems.map((item) => ({
+        key: generateKey(),
+        headerText: item.name,
+        initialName: item.name,
+        initialStorage: item.storageType,
         quantity: item.quantity,
-        storageType: item.storageType,
-        purchaseDateTime: data.purchaseDateTime,
-        expiryDate: computeExpiryDate(data.purchaseDateTime, item.days),
-        registeredVia: "영수증",
+        expanded: false,
       }));
-      if (autoRecords.length > 0) addItems(autoRecords);
+      const unmatchedReview = needsConfirmation.map((item) => ({
+        key: item.key,
+        headerText: item.reason === "unreadable" ? "??? (읽지 못한 줄)" : item.rawName,
+        initialName: item.reason === "unreadable" ? "" : item.rawName,
+        initialStorage: "냉장",
+        quantity: item.quantity || 1,
+        expanded: true,
+      }));
 
-      if (needsConfirmation.length === 0) {
+      const combined = [...matchedReview, ...unmatchedReview];
+      if (combined.length === 0) {
         router.push("/");
         return;
       }
 
       setPurchaseDateTime(data.purchaseDateTime);
-      setPendingConfirm(needsConfirmation);
+      setReviewItems(combined);
       setResolutions({});
       setStep("confirm");
     } catch (err) {
       setImages([]);
       setErrorMessage(
         err.name === "TimeoutError" || err.name === "AbortError"
-          ? "처리 시간이 너무 오래 걸려 중단했습니다. 다시 시도해주세요."
+          ? "처리 시간이 너무 오래 걸렸습니다. 다시 시도해주세요."
           : "네트워크 오류로 영수증을 인식하지 못했습니다."
       );
       setStep("capture");
@@ -109,8 +186,8 @@ export default function ReceiptPage() {
     setResolutions((prev) => ({ ...prev, [key]: data }));
   }
 
-  function handleDiscard(key) {
-    setPendingConfirm((prev) => prev.filter((item) => item.key !== key));
+  function handleRemove(key) {
+    setReviewItems((prev) => prev.filter((item) => item.key !== key));
     setResolutions((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -118,8 +195,8 @@ export default function ReceiptPage() {
     });
   }
 
-  function handleFinishConfirm() {
-    const records = pendingConfirm
+  function handleConfirmCheckin() {
+    const records = reviewItems
       .map((item) => resolutions[item.key])
       .filter(Boolean)
       .map((data) => ({
@@ -133,7 +210,7 @@ export default function ReceiptPage() {
     saveAndGoHome(records);
   }
 
-  const allReady = pendingConfirm.every((item) => resolutions[item.key] != null);
+  const allReady = reviewItems.length > 0 && reviewItems.every((item) => resolutions[item.key] != null);
 
   return (
     <>
@@ -159,61 +236,84 @@ export default function ReceiptPage() {
             className="hidden"
             onChange={handleFilesSelected}
           />
+          <canvas ref={canvasRef} className="hidden" />
 
-          <button
-            type="button"
-            onClick={openCamera}
-            className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-3xl"
+          <div
+            className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl"
             style={{ backgroundColor: "var(--color-surface-alt)", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1)" }}
           >
-            <div className="relative h-[85%] w-[75%]">
-              {["top-0 left-0 border-t-4 border-l-4 rounded-tl-xl", "top-0 right-0 border-t-4 border-r-4 rounded-tr-xl", "bottom-0 left-0 border-b-4 border-l-4 rounded-bl-xl", "bottom-0 right-0 border-b-4 border-r-4 rounded-br-xl"].map(
-                (cls) => (
-                  <span key={cls} className={`absolute h-8 w-8 border-white/70 ${cls}`} aria-hidden />
-                )
-              )}
-              <span className="absolute left-0 right-0 top-1/2 h-[2px]" style={{ backgroundColor: "var(--color-brand-light)" }} aria-hidden />
-            </div>
-            <p className="absolute bottom-4 text-sm" style={{ color: "var(--color-text-secondary)" }}>
-              {images.length > 0 ? `촬영된 사진 ${images.length}장` : "탭해서 촬영 / 사진 선택"}
-            </p>
-          </button>
+            {cameraReady ? (
+              <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <button
+                type="button"
+                onClick={openFilePicker}
+                className="absolute inset-0 flex items-center justify-center px-8 text-center text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
+              >
+                카메라를 사용할 수 없어요. 탭해서 사진을 선택해주세요.
+              </button>
+            )}
 
-          {errorMessage && <p className="text-center text-sm" style={{ color: "var(--color-red)" }}>{errorMessage}</p>}
+            {/* 실제 카메라 화면 위에 얹는 장식 오버레이 (코너 브래킷 + 스캔 라인) */}
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="relative h-[85%] w-[75%]">
+                {CORNER_CLASSES.map((cls) => (
+                  <span key={cls} className={`absolute h-8 w-8 border-white/70 ${cls}`} aria-hidden />
+                ))}
+                <span
+                  className="absolute left-0 right-0 top-1/2 h-[2px]"
+                  style={{ backgroundColor: "var(--color-brand-light)" }}
+                  aria-hidden
+                />
+              </div>
+            </div>
+
+            {images.length > 0 && (
+              <p className="absolute bottom-4 left-0 right-0 text-center text-sm text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.5)]">
+                촬영된 사진 {images.length}장
+              </p>
+            )}
+          </div>
+
+          {errorMessage && (
+            <p className="text-center text-sm" style={{ color: "var(--color-red)" }}>
+              {errorMessage}
+            </p>
+          )}
 
           <div className="flex flex-col items-center gap-4">
             <button
               type="button"
-              onClick={openCamera}
+              onClick={handleShutter}
               className="flex size-20 items-center justify-center rounded-full"
               style={{ backgroundColor: "var(--color-surface-muted)" }}
               aria-label="촬영하기"
             >
               <span className="flex size-16 items-center justify-center rounded-full" style={{ backgroundColor: "var(--color-brand)" }}>
-                <svg width="26" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                  <path d="M4 4h4l2-2h4l2 2h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
-                  <circle cx="12" cy="12" r="4" />
-                </svg>
+                <Image src="/icons/camera-shutter.svg" alt="" width={27} height={24} />
               </span>
             </button>
 
             <div className="flex w-full gap-2">
               <button
                 type="button"
-                onClick={openCamera}
-                className="min-h-[52px] flex-1 rounded-xl text-sm font-semibold"
+                onClick={handleShutter}
+                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl text-sm font-semibold"
                 style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-primary)" }}
               >
+                <Image src="/icons/retake.svg" alt="" width={15} height={15} />
                 이어서 촬영하기
               </button>
               <button
                 type="button"
                 onClick={handleComplete}
                 disabled={images.length === 0}
-                className="min-h-[52px] flex-1 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+                className="flex min-h-[52px] flex-1 items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white disabled:opacity-40"
                 style={{ backgroundColor: "var(--color-brand)" }}
               >
-                체크인 진행하기 →
+                체크인 진행하기
+                <Image src="/icons/checkin-proceed.svg" alt="" width={13} height={13} />
               </button>
             </div>
           </div>
@@ -232,7 +332,9 @@ export default function ReceiptPage() {
 
       {step === "duplicate" && (
         <div className="flex flex-col items-center gap-4 p-8 text-center">
-          <p className="text-sm" style={{ color: "var(--color-text-primary)" }}>동일한 영수증을 이미 입력했습니다</p>
+          <p className="text-sm" style={{ color: "var(--color-text-primary)" }}>
+            동일한 영수증을 이미 입력했습니다
+          </p>
           <button
             type="button"
             onClick={() => router.push("/")}
@@ -247,34 +349,34 @@ export default function ReceiptPage() {
       {step === "confirm" && (
         <div className="flex flex-col gap-4 px-4 pb-6 pt-6">
           <div>
-            <h1 className="text-xl font-bold" style={{ color: "var(--color-text-primary)" }}>
-              체크인 내용물 확인하기
+            <h1 className="text-2xl font-bold" style={{ color: "var(--color-text-primary)" }}>
+              체크인 확인하기
             </h1>
             <p className="mt-1 text-sm" style={{ color: "var(--color-text-secondary)" }}>
-              기준표에서 바로 찾지 못한 {pendingConfirm.length}개를 확인해주세요. 이름을 고치거나, 보관 구분과 일수를
-              직접 정할 수 있어요.
+              냉장고에 체크인하기 전, 품목이 맞는지 확인해주세요.
             </p>
           </div>
 
           <div className="flex flex-col gap-4">
-            {pendingConfirm.map((item) => (
-              <ReceiptConfirmCard key={item.key} item={item} onChange={handleCardChange} onDiscard={handleDiscard} />
+            {reviewItems.map((item) => (
+              <ReceiptConfirmCard key={item.key} item={item} onChange={handleCardChange} onRemove={handleRemove} />
             ))}
-            {pendingConfirm.length === 0 && (
+            {reviewItems.length === 0 && (
               <p className="py-6 text-center text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                남은 확인 품목이 없습니다.
+                남은 품목이 없습니다.
               </p>
             )}
           </div>
 
           <button
             type="button"
-            onClick={handleFinishConfirm}
+            onClick={handleConfirmCheckin}
             disabled={!allReady}
-            className="min-h-[52px] rounded-xl text-sm font-semibold text-white disabled:opacity-40"
+            className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:opacity-40"
             style={{ backgroundColor: "var(--color-brand-light)", color: "var(--color-brand-selected-text)" }}
           >
-            확인하고 추가하기
+            <Image src="/icons/checkin-confirm.svg" alt="" width={20} height={20} />
+            체크인 확정
           </button>
         </div>
       )}

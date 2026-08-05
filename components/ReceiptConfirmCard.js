@@ -4,12 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { lookupReferenceItem } from "@/lib/referenceTable";
 import ItemFields from "./ItemFields";
 
-// 영수증 확인 화면의 카드 1개. 개별 확인 버튼이 없고, 값이 바뀔 때마다
-// 부모에게 현재 상태를 보고한다 — 부모의 "확인하고 추가하기" 버튼이 전체를 한 번에 저장한다.
-export default function ReceiptConfirmCard({ item, onChange, onDiscard }) {
-  const [name, setName] = useState(item.reason === "unreadable" ? "" : item.rawName);
-  const [quantity, setQuantity] = useState(item.quantity || 1);
-  const [storageType, setStorageType] = useState("냉장");
+// 스캔된 품목 1개. 자동 매칭된 품목은 압축 상태(이름 고정 텍스트 + 수정하기)로 시작하고,
+// 매칭 안 된 품목은 펼친 상태(입력창 + 취소 + 수정하기)로 시작한다.
+// "취소"는 되돌리기가 아니라 이 품목을 이번 체크인에서 아예 빼는 버튼이다.
+export default function ReceiptConfirmCard({ item, onChange, onRemove }) {
+  const [expanded, setExpanded] = useState(item.expanded);
+  const [name, setName] = useState(item.initialName);
+  const [quantity, setQuantity] = useState(item.quantity);
+  const [storageType, setStorageType] = useState(item.initialStorage);
   const [manualDays, setManualDays] = useState("");
 
   const match = useMemo(() => lookupReferenceItem(name, storageType), [name, storageType]);
@@ -20,7 +22,7 @@ export default function ReceiptConfirmCard({ item, onChange, onDiscard }) {
 
   useEffect(() => {
     onChange(item.key, ready ? { name: name.trim(), quantity, storageType, days: effectiveDays } : null);
-    // item.key와 onChange는 부모에서 안정적으로 넘어오므로 의존성에서 뺀다.
+    // item.key/onChange는 부모에서 안정적으로 내려오므로 의존성에서 뺀다.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [name, quantity, storageType, effectiveDays, ready]);
 
@@ -31,22 +33,35 @@ export default function ReceiptConfirmCard({ item, onChange, onDiscard }) {
         style={{ backgroundColor: ready ? "var(--color-brand)" : "var(--color-surface-muted)" }}
         aria-hidden
       />
-      <div className="mb-3 flex items-start justify-between gap-2 pl-1">
-        <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
-          {item.reason === "unreadable" ? '인식된 이름: "??? (읽지 못한 줄)"' : `인식된 이름: "${item.rawName}"`}
+      <div className="flex items-center justify-between gap-2 pl-1">
+        <p className="truncate text-base" style={{ color: "var(--color-text-secondary)" }}>
+          {item.headerText}
         </p>
-        <button
-          type="button"
-          onClick={() => onDiscard(item.key)}
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm"
-          style={{ backgroundColor: "var(--color-bg)", color: "var(--color-text-secondary)" }}
-          aria-label="이 품목 제외하기"
-        >
-          ✕
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          {expanded && (
+            <button
+              type="button"
+              onClick={() => onRemove(item.key)}
+              className="text-xs"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              취소
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-xs"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            수정하기
+          </button>
+        </div>
       </div>
-      <div className="pl-1">
+
+      <div className="mt-3 pl-1">
         <ItemFields
+          showName={expanded}
           name={name}
           onNameChange={setName}
           quantity={quantity}

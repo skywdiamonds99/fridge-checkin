@@ -1,10 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { loadItems } from "@/lib/storage";
 import { computeDashboardStats } from "@/lib/dashboardStats";
 import StatusIconBadge from "@/components/StatusIconBadge";
+
+const ZONE_ICONS = { 냉장: "fridge-zone", 냉동: "freezer-zone", 실온: "pantry-zone" };
 
 function getGreeting(date) {
   const hour = date.getHours();
@@ -61,10 +64,7 @@ export default function MainHome() {
               영수증을 찍어 냉장고에 저장
             </p>
           </div>
-          <svg width="20" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-primary)" strokeWidth="2">
-            <path d="M4 4h4l2-2h4l2 2h4a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z" />
-            <circle cx="12" cy="12" r="4" />
-          </svg>
+          <Image src="/icons/receipt-cta.svg" alt="" width={20} height={22} />
         </Link>
 
         <div className="flex flex-1 flex-col gap-2">
@@ -80,9 +80,7 @@ export default function MainHome() {
                 {stats ? stats.urgentCount : "–"}
               </p>
             </div>
-            <span aria-hidden style={{ color: "var(--color-red)" }}>
-              ⚠
-            </span>
+            <Image src="/icons/warning.svg" alt="" width={22} height={19} />
           </div>
           <div
             className="flex flex-1 items-center justify-between rounded-xl px-4 py-2"
@@ -96,6 +94,7 @@ export default function MainHome() {
                 {stats ? stats.totalQuantity : "–"}
               </p>
             </div>
+            <Image src="/icons/checkin-status.svg" alt="" width={16} height={20} />
           </div>
         </div>
       </div>
@@ -151,12 +150,13 @@ export default function MainHome() {
             <Link key={type} href={`/browse?filter=${encodeURIComponent(type)}`} className="flex flex-col items-center gap-2">
               <div
                 className="flex size-16 items-center justify-center rounded-full shadow-sm"
-                style={{ backgroundColor: "var(--color-surface-muted)" }}
+                style={{ backgroundColor: type === "냉장" ? "var(--color-brand-light)" : "var(--color-surface-muted)" }}
               >
-                <span className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-                  {type}
-                </span>
+                <Image src={`/icons/${ZONE_ICONS[type]}.svg`} alt="" width={20} height={22} />
               </div>
+              <span className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                {type}
+              </span>
             </Link>
           ))}
         </div>
